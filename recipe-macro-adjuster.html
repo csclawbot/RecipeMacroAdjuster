@@ -1,0 +1,870 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Macro Adjuster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --primary-light: #eef2ff;
+      --accent: #10b981;
+      --accent-light: #d1fae5;
+      --danger: #ef4444;
+      --danger-light: #fee2e2;
+      --orange: #f97316;
+      --orange-light: #ffedd5;
+      --blue: #3b82f6;
+      --blue-light: #dbeafe;
+      --purple: #a855f7;
+      --purple-light: #f3e8ff;
+      --bg: #f1f5f9;
+      --surface: #ffffff;
+      --border: #e2e8f0;
+      --border-focus: #6366f1;
+      --text: #1e293b;
+      --text-muted: #64748b;
+      --text-light: #94a3b8;
+      --radius: 14px;
+      --radius-sm: 8px;
+      --shadow: 0 1px 3px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.07);
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    /* ── Header ── */
+    header {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 60%, #a855f7 100%);
+      padding: 36px 24px 32px;
+      color: white;
+      text-align: center;
+    }
+    header h1 {
+      font-size: clamp(1.6rem, 4vw, 2.2rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 6px;
+    }
+    header p {
+      opacity: 0.85;
+      font-size: 1rem;
+      font-weight: 400;
+    }
+
+    /* ── Layout ── */
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 28px 20px 60px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: start;
+    }
+    .left-col, .right-col { display: flex; flex-direction: column; gap: 20px; }
+
+    /* ── Cards ── */
+    .card {
+      background: var(--surface);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      padding: 22px 24px;
+    }
+    .card-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .card-title .icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+    .icon-purple { background: var(--primary-light); color: var(--primary); }
+    .icon-green  { background: var(--accent-light);  color: var(--accent); }
+    .icon-orange { background: var(--orange-light);  color: var(--orange); }
+    .icon-blue   { background: var(--blue-light);    color: var(--blue); }
+
+    /* ── Form Elements ── */
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label {
+      font-size: 0.78rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    input[type="text"], input[type="number"] {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      padding: 9px 12px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      color: var(--text);
+      background: white;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      width: 100%;
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    input.error { border-color: var(--danger); }
+
+    .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+    /* ── Macros Grid ── */
+    .macro-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .macro-field {
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    .macro-field:focus-within {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 0 3px rgba(99,102,241,0.12);
+    }
+    .macro-field .macro-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      padding: 5px 10px 0;
+    }
+    .macro-field input {
+      border: none;
+      border-radius: 0;
+      padding: 3px 10px 7px;
+      box-shadow: none !important;
+    }
+    .macro-field input:focus { box-shadow: none !important; }
+    .cal-field  .macro-label { color: var(--orange); }
+    .prot-field .macro-label { color: var(--accent); }
+    .carb-field .macro-label { color: var(--blue); }
+    .fat-field  .macro-label { color: var(--purple); }
+    .cal-field  { border-top: 3px solid var(--orange); }
+    .prot-field { border-top: 3px solid var(--accent); }
+    .carb-field { border-top: 3px solid var(--blue); }
+    .fat-field  { border-top: 3px solid var(--purple); }
+
+    /* ── Ingredients ── */
+    .ingredient-header {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 28px;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .ingredient-header span {
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--text-light);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      padding: 0 2px;
+    }
+    #ingredient-list { display: flex; flex-direction: column; gap: 7px; }
+    .ingredient-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 28px;
+      gap: 8px;
+      align-items: center;
+      animation: fadeInUp 0.2s ease;
+    }
+    .btn-remove {
+      width: 28px; height: 28px;
+      border: none;
+      border-radius: 6px;
+      background: transparent;
+      color: var(--text-light);
+      cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 16px;
+      transition: background 0.15s, color 0.15s;
+      flex-shrink: 0;
+    }
+    .btn-remove:hover { background: var(--danger-light); color: var(--danger); }
+    .btn-add {
+      width: 100%;
+      margin-top: 10px;
+      padding: 9px;
+      border: 1.5px dashed var(--border);
+      border-radius: var(--radius-sm);
+      background: transparent;
+      color: var(--text-muted);
+      font-family: inherit;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: border-color 0.15s, color 0.15s, background 0.15s;
+    }
+    .btn-add:hover { border-color: var(--primary); color: var(--primary); background: var(--primary-light); }
+
+    /* ── Mode Tabs ── */
+    .mode-tabs {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 6px;
+      margin-bottom: 18px;
+    }
+    .mode-tabs input[type="radio"] { display: none; }
+    .mode-tabs label {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 3px;
+      padding: 10px 6px 8px;
+      border: 1.5px solid var(--border);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      text-align: center;
+      transition: all 0.15s;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      line-height: 1.2;
+    }
+    .mode-tabs label .tab-icon { font-size: 18px; margin-bottom: 2px; }
+    .mode-tabs input[type="radio"]:checked + label {
+      border-color: var(--primary);
+      background: var(--primary-light);
+      color: var(--primary);
+    }
+    .mode-panel { display: none; }
+    .mode-panel.active { display: block; animation: fadeInUp 0.2s ease; }
+
+    .target-hint {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-bottom: 10px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: var(--radius-sm);
+      line-height: 1.4;
+    }
+
+    /* ── Calculate Button ── */
+    .btn-calc {
+      width: 100%;
+      margin-top: 18px;
+      padding: 14px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      font-family: inherit;
+      font-size: 0.95rem;
+      font-weight: 700;
+      cursor: pointer;
+      transition: transform 0.1s, box-shadow 0.15s, opacity 0.15s;
+      box-shadow: 0 4px 14px rgba(99,102,241,0.35);
+      letter-spacing: 0.01em;
+    }
+    .btn-calc:hover { box-shadow: 0 6px 20px rgba(99,102,241,0.45); }
+    .btn-calc:active { transform: scale(0.98); }
+
+    /* ── Errors ── */
+    .error-box {
+      display: none;
+      background: var(--danger-light);
+      border: 1px solid #fca5a5;
+      border-radius: var(--radius-sm);
+      padding: 10px 14px;
+      margin-top: 12px;
+      font-size: 0.83rem;
+      color: #b91c1c;
+      font-weight: 500;
+    }
+    .error-box.visible { display: block; animation: fadeInUp 0.2s ease; }
+    .error-box ul { margin-left: 16px; margin-top: 4px; }
+
+    /* ── Results ── */
+    #results-card {
+      display: none;
+      animation: fadeInUp 0.3s ease;
+    }
+    #results-card.visible { display: block; }
+
+    .scale-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 999px;
+      font-size: 1rem;
+      font-weight: 800;
+      box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+      animation: pulse 0.4s ease;
+    }
+    .scale-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 18px;
+      flex-wrap: wrap;
+    }
+    .scale-serving {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+    .scale-serving strong { color: var(--text); }
+
+    .results-section-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: var(--text-light);
+      margin-bottom: 8px;
+      margin-top: 16px;
+    }
+    .results-section-label:first-of-type { margin-top: 0; }
+
+    .macro-cards {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+    .macro-card {
+      border-radius: var(--radius-sm);
+      padding: 10px 10px 8px;
+      text-align: center;
+      animation: fadeInUp 0.3s ease both;
+    }
+    .macro-card:nth-child(1) { background: var(--orange-light); animation-delay: 0ms; }
+    .macro-card:nth-child(2) { background: var(--accent-light); animation-delay: 60ms; }
+    .macro-card:nth-child(3) { background: var(--blue-light);   animation-delay: 120ms; }
+    .macro-card:nth-child(4) { background: var(--purple-light); animation-delay: 180ms; }
+    .macro-card .mc-value {
+      font-size: 1.15rem;
+      font-weight: 800;
+      display: block;
+      line-height: 1;
+      margin-bottom: 3px;
+    }
+    .macro-card:nth-child(1) .mc-value { color: var(--orange); }
+    .macro-card:nth-child(2) .mc-value { color: var(--accent); }
+    .macro-card:nth-child(3) .mc-value { color: var(--blue); }
+    .macro-card:nth-child(4) .mc-value { color: var(--purple); }
+    .macro-card .mc-label { font-size: 0.7rem; font-weight: 600; color: var(--text-muted); }
+
+    /* ── Ingredient Results ── */
+    .ingredient-result-list { display: flex; flex-direction: column; gap: 0; }
+    .ingredient-result {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid var(--border);
+      animation: fadeInUp 0.2s ease both;
+    }
+    .ingredient-result:last-child { border-bottom: none; }
+    .ing-name { font-weight: 500; color: var(--text); font-size: 0.9rem; }
+    .ing-amount {
+      font-weight: 700;
+      color: var(--primary);
+      font-size: 0.9rem;
+      white-space: nowrap;
+      margin-left: 8px;
+    }
+    .ing-original {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-left: 6px;
+    }
+
+    .empty-ingredients {
+      text-align: center;
+      padding: 16px;
+      color: var(--text-light);
+      font-size: 0.85rem;
+      font-style: italic;
+    }
+
+    /* ── Divider ── */
+    .divider {
+      height: 1px;
+      background: var(--border);
+      margin: 16px 0;
+    }
+
+    /* ── Animations ── */
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+    @keyframes pulse {
+      0%   { transform: scale(1); }
+      50%  { transform: scale(1.06); }
+      100% { transform: scale(1); }
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 800px) {
+      .grid { grid-template-columns: 1fr; }
+      .macro-cards { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 480px) {
+      .mode-tabs { grid-template-columns: repeat(2, 1fr); }
+      header { padding: 28px 16px 24px; }
+      .container { padding: 16px 12px 48px; }
+      .card { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🥗 Recipe Macro Adjuster</h1>
+  <p>Scale any recipe to hit your exact nutrition targets</p>
+</header>
+
+<div class="container">
+  <div class="grid">
+
+    <!-- ──────────── LEFT COLUMN ──────────── -->
+    <div class="left-col">
+
+      <!-- Recipe Info -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon icon-purple">📋</div>
+          Recipe Details
+        </div>
+        <div class="two-col" style="margin-bottom:12px">
+          <div class="field">
+            <label for="recipe-name">Recipe Name</label>
+            <input type="text" id="recipe-name" placeholder="e.g. Overnight Oats" value="High-Protein Overnight Oats" />
+          </div>
+          <div class="field">
+            <label for="original-servings">Original Servings</label>
+            <input type="number" id="original-servings" placeholder="1" min="0.01" step="0.5" value="1" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Ingredients -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon icon-green">🧂</div>
+          Ingredients
+        </div>
+        <div class="ingredient-header">
+          <span>Ingredient</span>
+          <span>Amount</span>
+          <span>Unit</span>
+          <span></span>
+        </div>
+        <div id="ingredient-list"></div>
+        <button class="btn-add" onclick="addIngredientRow()">+ Add Ingredient</button>
+      </div>
+
+      <!-- Macros per serving -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon icon-orange">📊</div>
+          Macros Per Serving
+        </div>
+        <div class="macro-grid">
+          <div class="macro-field cal-field">
+            <div class="macro-label">Calories (kcal)</div>
+            <input type="number" id="macro-cal" placeholder="0" min="0" step="1" value="420" />
+          </div>
+          <div class="macro-field prot-field">
+            <div class="macro-label">Protein (g)</div>
+            <input type="number" id="macro-prot" placeholder="0" min="0" step="0.1" value="35" />
+          </div>
+          <div class="macro-field carb-field">
+            <div class="macro-label">Carbs (g)</div>
+            <input type="number" id="macro-carb" placeholder="0" min="0" step="0.1" value="52" />
+          </div>
+          <div class="macro-field fat-field">
+            <div class="macro-label">Fat (g)</div>
+            <input type="number" id="macro-fat" placeholder="0" min="0" step="0.1" value="8" />
+          </div>
+        </div>
+      </div>
+
+    </div><!-- /left -->
+
+    <!-- ──────────── RIGHT COLUMN ──────────── -->
+    <div class="right-col">
+
+      <!-- Adjustment Mode -->
+      <div class="card">
+        <div class="card-title">
+          <div class="icon icon-blue">🎯</div>
+          Adjustment Target
+        </div>
+
+        <div class="mode-tabs">
+          <input type="radio" name="mode" id="mode-servings" value="servings" checked />
+          <label for="mode-servings">
+            <span class="tab-icon">🍽️</span>
+            By Servings
+          </label>
+
+          <input type="radio" name="mode" id="mode-calories" value="calories" />
+          <label for="mode-calories">
+            <span class="tab-icon">🔥</span>
+            By Calories
+          </label>
+
+          <input type="radio" name="mode" id="mode-protein" value="protein" />
+          <label for="mode-protein">
+            <span class="tab-icon">💪</span>
+            By Protein
+          </label>
+
+          <input type="radio" name="mode" id="mode-budget" value="budget" />
+          <label for="mode-budget">
+            <span class="tab-icon">📅</span>
+            Daily Budget
+          </label>
+        </div>
+
+        <!-- Servings panel -->
+        <div id="panel-servings" class="mode-panel active">
+          <div class="target-hint">Scale the entire recipe to make a specific number of servings. All ingredient amounts will adjust proportionally.</div>
+          <div class="field">
+            <label for="target-servings">Target Servings</label>
+            <input type="number" id="target-servings" placeholder="e.g. 4" min="0.01" step="0.5" value="4" />
+          </div>
+        </div>
+
+        <!-- Calories panel -->
+        <div id="panel-calories" class="mode-panel">
+          <div class="target-hint">Scale the recipe so each serving hits your calorie goal. The number of servings will update to match the new total yield.</div>
+          <div class="field">
+            <label for="target-cal">Target Calories Per Serving (kcal)</label>
+            <input type="number" id="target-cal" placeholder="e.g. 500" min="1" step="1" />
+          </div>
+        </div>
+
+        <!-- Protein panel -->
+        <div id="panel-protein" class="mode-panel">
+          <div class="target-hint">Scale the recipe to match a specific protein target per serving. Useful for hitting daily protein goals across multiple meals.</div>
+          <div class="field">
+            <label for="target-prot">Target Protein Per Serving (g)</label>
+            <input type="number" id="target-prot" placeholder="e.g. 40" min="0.1" step="0.1" />
+          </div>
+        </div>
+
+        <!-- Budget panel -->
+        <div id="panel-budget" class="mode-panel">
+          <div class="target-hint">Fit the <em>entire recipe</em> into a total calorie budget. Ideal for meal prepping a full day or week of food.</div>
+          <div class="field">
+            <label for="target-budget">Total Calorie Budget (kcal)</label>
+            <input type="number" id="target-budget" placeholder="e.g. 2000" min="1" step="10" />
+          </div>
+        </div>
+
+        <div id="error-box" class="error-box"></div>
+        <button class="btn-calc" onclick="calculate()">Calculate →</button>
+      </div>
+
+      <!-- Results -->
+      <div class="card" id="results-card">
+        <div class="card-title">
+          <div class="icon icon-green">✅</div>
+          <span id="results-recipe-name">Results</span>
+        </div>
+
+        <div class="scale-info">
+          <div class="scale-badge" id="scale-factor-badge">×1.0</div>
+          <span class="scale-serving" id="serving-info"></span>
+        </div>
+
+        <div class="results-section-label">Macros Per Serving</div>
+        <div class="macro-cards" id="per-serving-macros"></div>
+
+        <div class="divider"></div>
+
+        <div class="results-section-label">Total Recipe Macros</div>
+        <div class="macro-cards" id="total-macros"></div>
+
+        <div class="divider"></div>
+
+        <div class="results-section-label">Scaled Ingredients</div>
+        <div class="ingredient-result-list" id="scaled-ingredients"></div>
+      </div>
+
+    </div><!-- /right -->
+
+  </div>
+</div>
+
+<script>
+  // ── Default ingredients ──
+  const DEFAULT_INGREDIENTS = [
+    { name: 'Rolled oats',    amount: '80',  unit: 'g' },
+    { name: 'Protein powder', amount: '31',  unit: 'g' },
+    { name: 'Almond milk',    amount: '200', unit: 'ml' },
+    { name: 'Banana',         amount: '60',  unit: 'g' },
+  ];
+
+  // ── Init ──
+  document.addEventListener('DOMContentLoaded', () => {
+    DEFAULT_INGREDIENTS.forEach(ing => addIngredientRow(ing.name, ing.amount, ing.unit));
+    setupModeListeners();
+  });
+
+  // ── Mode switching ──
+  function setupModeListeners() {
+    document.querySelectorAll('input[name="mode"]').forEach(radio => {
+      radio.addEventListener('change', () => {
+        document.querySelectorAll('.mode-panel').forEach(p => p.classList.remove('active'));
+        document.getElementById('panel-' + radio.value).classList.add('active');
+      });
+    });
+  }
+
+  // ── Ingredient row management ──
+  let rowId = 0;
+  function addIngredientRow(name = '', amount = '', unit = '') {
+    const id = ++rowId;
+    const row = document.createElement('div');
+    row.className = 'ingredient-row';
+    row.dataset.rowId = id;
+    row.innerHTML = `
+      <input type="text"   placeholder="Ingredient name" value="${escapeAttr(name)}" />
+      <input type="number" placeholder="0" min="0" step="0.01" value="${escapeAttr(amount)}" />
+      <input type="text"   placeholder="g / ml / oz…" value="${escapeAttr(unit)}" />
+      <button class="btn-remove" onclick="removeRow(this)" title="Remove">×</button>
+    `;
+    document.getElementById('ingredient-list').appendChild(row);
+  }
+
+  function removeRow(btn) {
+    const list = document.getElementById('ingredient-list');
+    if (list.children.length <= 1) return; // keep at least 1
+    btn.closest('.ingredient-row').remove();
+  }
+
+  function getIngredients() {
+    return Array.from(document.querySelectorAll('.ingredient-row')).map(row => {
+      const inputs = row.querySelectorAll('input');
+      return {
+        name:   inputs[0].value.trim(),
+        amount: parseFloat(inputs[1].value) || 0,
+        unit:   inputs[2].value.trim(),
+      };
+    });
+  }
+
+  // ── Read form values ──
+  function readRecipe() {
+    return {
+      name:             document.getElementById('recipe-name').value.trim() || 'Untitled Recipe',
+      originalServings: parseFloat(document.getElementById('original-servings').value) || 0,
+      ingredients:      getIngredients(),
+      macros: {
+        calories: parseFloat(document.getElementById('macro-cal').value)  || 0,
+        protein:  parseFloat(document.getElementById('macro-prot').value) || 0,
+        carbs:    parseFloat(document.getElementById('macro-carb').value) || 0,
+        fat:      parseFloat(document.getElementById('macro-fat').value)  || 0,
+      }
+    };
+  }
+
+  function readAdjustment() {
+    const mode = document.querySelector('input[name="mode"]:checked').value;
+    const valueMap = {
+      servings: document.getElementById('target-servings').value,
+      calories: document.getElementById('target-cal').value,
+      protein:  document.getElementById('target-prot').value,
+      budget:   document.getElementById('target-budget').value,
+    };
+    return { mode, value: parseFloat(valueMap[mode]) || 0 };
+  }
+
+  // ── Validation ──
+  function validate(recipe, adj) {
+    const errors = [];
+    if (recipe.originalServings <= 0)
+      errors.push('Original servings must be greater than 0.');
+    if (adj.value <= 0)
+      errors.push('Target value must be greater than 0.');
+    if (adj.mode === 'calories' && recipe.macros.calories <= 0)
+      errors.push('Calories per serving must be > 0 to scale by calories.');
+    if (adj.mode === 'protein' && recipe.macros.protein <= 0)
+      errors.push('Protein per serving must be > 0 to scale by protein.');
+    if (adj.mode === 'budget' && recipe.macros.calories <= 0)
+      errors.push('Calories per serving must be > 0 to use the daily budget mode.');
+    return errors;
+  }
+
+  // ── Core calculation ──
+  function calcScaleFactor(mode, value, recipe) {
+    switch (mode) {
+      case 'servings': return value / recipe.originalServings;
+      case 'calories': return value / recipe.macros.calories;
+      case 'protein':  return value / recipe.macros.protein;
+      case 'budget':   return value / (recipe.macros.calories * recipe.originalServings);
+    }
+  }
+
+  function computeResults(recipe, scaleFactor) {
+    const newServings = recipe.originalServings * scaleFactor;
+    return {
+      scaleFactor,
+      newServings,
+      macrosPerServing: { ...recipe.macros },
+      totalMacros: {
+        calories: recipe.macros.calories * newServings,
+        protein:  recipe.macros.protein  * newServings,
+        carbs:    recipe.macros.carbs    * newServings,
+        fat:      recipe.macros.fat      * newServings,
+      },
+      scaledIngredients: recipe.ingredients.map(ing => ({
+        ...ing,
+        scaledAmount: ing.amount * scaleFactor,
+      })),
+    };
+  }
+
+  // ── Main calculate ──
+  function calculate() {
+    clearErrors();
+    const recipe = readRecipe();
+    const adj    = readAdjustment();
+    const errors = validate(recipe, adj);
+
+    if (errors.length) {
+      showErrors(errors);
+      return;
+    }
+
+    const sf      = calcScaleFactor(adj.mode, adj.value, recipe);
+    const results = computeResults(recipe, sf);
+    renderResults(recipe.name, results);
+  }
+
+  // ── Render ──
+  function renderResults(recipeName, r) {
+    document.getElementById('results-recipe-name').textContent = recipeName;
+
+    // Scale badge
+    document.getElementById('scale-factor-badge').textContent =
+      '×' + fmt(r.scaleFactor, 2);
+
+    // Serving info
+    const servingWord = r.newServings === 1 ? 'serving' : 'servings';
+    document.getElementById('serving-info').innerHTML =
+      `<strong>${fmt(r.newServings, 1)}</strong> ${servingWord} total`;
+
+    // Per-serving macros
+    document.getElementById('per-serving-macros').innerHTML =
+      macroCardsHTML(r.macrosPerServing, true);
+
+    // Total macros
+    document.getElementById('total-macros').innerHTML =
+      macroCardsHTML(r.totalMacros, false);
+
+    // Scaled ingredients
+    const ingList = document.getElementById('scaled-ingredients');
+    const visible = r.scaledIngredients.filter(i => i.name || i.amount);
+    if (visible.length === 0) {
+      ingList.innerHTML = '<div class="empty-ingredients">No ingredients entered.</div>';
+    } else {
+      ingList.innerHTML = visible.map((ing, i) => `
+        <div class="ingredient-result" style="animation-delay:${i * 40}ms">
+          <span class="ing-name">${escapeHtml(ing.name) || '<em style="color:var(--text-light)">Unnamed</em>'}</span>
+          <div>
+            <span class="ing-amount">${fmt(ing.scaledAmount, 1)} ${escapeHtml(ing.unit)}</span>
+            ${ing.amount > 0 ? `<span class="ing-original">(orig: ${fmt(ing.amount, 1)})</span>` : ''}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    const card = document.getElementById('results-card');
+    card.classList.remove('visible');
+    void card.offsetWidth; // reflow to re-trigger animation
+    card.classList.add('visible');
+  }
+
+  function macroCardsHTML(macros, perServing) {
+    const unit = perServing ? '' : '';
+    return `
+      <div class="macro-card">
+        <span class="mc-value">${fmtMacro(macros.calories, 0)}</span>
+        <span class="mc-label">kcal</span>
+      </div>
+      <div class="macro-card">
+        <span class="mc-value">${fmtMacro(macros.protein, 1)}</span>
+        <span class="mc-label">protein</span>
+      </div>
+      <div class="macro-card">
+        <span class="mc-value">${fmtMacro(macros.carbs, 1)}</span>
+        <span class="mc-label">carbs</span>
+      </div>
+      <div class="macro-card">
+        <span class="mc-value">${fmtMacro(macros.fat, 1)}</span>
+        <span class="mc-label">fat</span>
+      </div>
+    `;
+  }
+
+  // ── Errors ──
+  function showErrors(errors) {
+    const box = document.getElementById('error-box');
+    box.innerHTML = errors.length === 1
+      ? errors[0]
+      : '<ul>' + errors.map(e => `<li>${e}</li>`).join('') + '</ul>';
+    box.classList.add('visible');
+  }
+  function clearErrors() {
+    const box = document.getElementById('error-box');
+    box.classList.remove('visible');
+    box.innerHTML = '';
+  }
+
+  // ── Helpers ──
+  function fmt(n, decimals = 1) {
+    if (!isFinite(n) || isNaN(n)) return '—';
+    const m = 10 ** decimals;
+    const r = Math.round(n * m) / m;
+    return r % 1 === 0 ? r.toString() : r.toFixed(decimals);
+  }
+  function fmtMacro(n, decimals) {
+    const s = fmt(n, decimals);
+    return s === '—' ? '—' : s + (decimals > 0 ? 'g' : '');
+  }
+  function escapeHtml(s) {
+    return String(s)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function escapeAttr(s) {
+    return String(s).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+</script>
+</body>
+</html>
