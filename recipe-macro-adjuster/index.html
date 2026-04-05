@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Recipe Macro Adjuster</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/styles.css" />
+</head>
+<body>
+
+  <nav id="app-nav">
+    <div class="nav-inner">
+      <a href="#library" class="nav-logo">🥗 Recipe Macro Adjuster</a>
+      <a href="#new" class="btn btn-primary btn-sm">+ New Recipe</a>
+    </div>
+  </nav>
+
+  <main id="app-main"></main>
+
+  <!-- Load order matters: utils → storage → views → app -->
+  <script src="js/utils.js"></script>
+  <script src="js/storage.js"></script>
+  <script src="js/views/library.js"></script>
+  <script src="js/views/editor.js"></script>
+  <script src="js/views/adjuster.js"></script>
+  <script src="js/app.js"></script>
+
+</body>
+</html>

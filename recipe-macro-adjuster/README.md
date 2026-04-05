@@ -1,25 +1,25 @@
 # Recipe Macro Adjuster
 
-A multi-view web app for saving recipes and scaling them to hit specific nutrition targets. Recipes persist across sessions via `localStorage`. No build step, no backend, no dependencies — just open `index.html` in a browser.
+A multi-view web app for saving recipes and scaling them to meet specific nutrition targets. Recipes persist across sessions via `localStorage`. No build step, no backend, no dependencies — just open `index.html` in a browser.
 
 ---
 
 ## Purpose
 
-Cooking to hit exact macros is tedious. This tool lets you build a personal library of saved recipes, then instantly scale any of them to reach a nutrition target — whether that's a specific number of servings, a per-serving calorie or protein goal, or a total daily calorie budget.
+Cooking to hit exact macros is tedious. This tool lets you build a library of saved recipes, then instantly scale any of them to reach a nutrition target — whether that's a specific number of servings, a per-serving calorie or protein goal, or a total daily calorie budget.
 
 ---
 
 ## Features
 
-- **Recipe Library** — browse all saved recipes with per-serving macro summaries; adjust, edit, or delete any recipe
+- **Recipe Library** — browse, search, edit, and delete saved recipes with macro summaries at a glance
 - **Recipe Editor** — create and edit recipes with a dynamic ingredient list and per-serving macro fields
-- **Persistent storage** — recipes are saved to `localStorage` and survive page refresh
 - **4 adjustment modes:**
-  - **By Servings** — scale the recipe to produce N servings
+  - **By Servings** — scale to produce N servings
   - **By Calories per Serving** — scale so each serving hits a calorie target
   - **By Protein per Serving** — scale to meet a per-serving protein goal
-  - **Daily Calorie Budget** — scale the full recipe to fit a total calorie budget
+  - **Daily Calorie Budget** — scale the full recipe to fit a total calorie limit
+- **Persistent storage** — recipes are saved to `localStorage` and survive page refresh
 - **Scale factor display** — shows exactly how much the recipe was scaled (e.g. ×2.4)
 - **Original vs. scaled amounts** — both shown side by side in results
 - **Seed recipe** — a sample recipe loads on first launch so the app is immediately usable
@@ -53,7 +53,7 @@ Cooking to hit exact macros is tedious. This tool lets you build a personal libr
 
    Or double-click `index.html` in your file explorer.
 
-> **Note:** The app loads Inter from Google Fonts. An internet connection is required for the font to render correctly, but the app is fully functional offline with a system fallback font.
+> **Note:** The app loads Inter from Google Fonts. An internet connection is required for the font; the app is fully functional offline with a system fallback font.
 
 ---
 
@@ -77,21 +77,21 @@ recipe-macro-adjuster/
 
 ### Script Loading Order
 
-Scripts are included with plain `<script>` tags in `index.html`. The order is strict:
+Scripts are loaded with plain `<script>` tags in `index.html`. The order is strict and must be maintained:
 
 ```
 utils.js → storage.js → views/library.js → views/editor.js → views/adjuster.js → app.js
 ```
 
-`app.js` must load last — it calls `App.views.*` and `App.storage.*` on `DOMContentLoaded`.
+`app.js` must load last because it calls `App.views.*` and `App.storage.*` on `DOMContentLoaded`.
 
 ---
 
-## Architecture Overview
+## Architecture
 
 ### Global Namespace
 
-All modules extend `window.App` to share state without ES modules (which would require a local server to avoid CORS restrictions):
+All modules extend `window.App` to share state without ES modules (which would require a local server):
 
 ```
 App.utils     — uuid, fmt, fmtMacro, escapeHtml, escapeAttr
@@ -100,32 +100,32 @@ App.views     — { library, editor, adjuster } (each has a render() method)
 App.showToast — displays a transient success notification
 ```
 
-### Routing
+### Hash-Based Routing
 
-`app.js` listens to `hashchange` and dispatches to the correct view:
+`app.js` listens to `hashchange` and dispatches to the appropriate view:
 
 | Hash | View |
 |---|---|
 | `#library` | Recipe library grid |
 | `#new` | Editor (create mode) |
-| `#edit/{id}` | Editor (edit mode, pre-populated from storage) |
+| `#edit/{id}` | Editor (edit mode, pre-populated) |
 | `#adjust/{id}` | Adjuster (loaded from storage by id) |
 
-Unknown or empty hashes redirect to `#library` via `location.replace` (avoids polluting browser history).
+Unknown or empty hashes redirect to `#library` via `location.replace` (no history pollution).
 
 ### View Pattern
 
-Each view has a single `render(container, ...args)` method that:
+Each view exports a single `render(container, ...args)` function that:
 1. Receives the `<main>` element as `container`
 2. Sets `container.innerHTML` with its template
 3. Binds all event listeners inside the rendered HTML
 
-Views are stateless between navigations — all data lives in `localStorage`.
+Views are stateless between navigations — all state lives in `localStorage`.
 
 ### Data Model
 
 ```javascript
-// Stored in localStorage under key "rma_v1_recipes" as a JSON array
+// Stored in localStorage as JSON array under key "rma_v1_recipes"
 {
   id:          "uuid-string",
   name:        "High-Protein Overnight Oats",
@@ -139,16 +139,16 @@ Views are stateless between navigations — all data lives in `localStorage`.
     carbs:    52,
     fat:      8
   },
-  createdAt:   "2026-04-05T00:00:00.000Z",
-  updatedAt:   "2026-04-05T00:00:00.000Z"
+  createdAt:   "2026-04-03T00:00:00.000Z",
+  updatedAt:   "2026-04-03T00:00:00.000Z"
 }
 ```
 
-Macros are always stored **per serving**. The adjuster multiplies them by `newServings` to compute totals.
+Macros are always stored **per serving**. The adjuster multiplies them by `newServings` to get totals.
 
 ### Scale Factor Logic
 
-All four modes reduce to a single scale factor applied uniformly to every ingredient amount and the total serving count:
+All four modes derive a single scale factor applied uniformly to every ingredient and the total serving count:
 
 | Mode | Formula |
 |---|---|
@@ -157,7 +157,7 @@ All four modes reduce to a single scale factor applied uniformly to every ingred
 | By Protein | `target_protein / recipe.macros.protein` |
 | Daily Budget | `budget / (recipe.macros.calories × recipe.servings)` |
 
-Macros per serving are unchanged in all modes — the scale factor scales total yield and serving count together.
+Macros per serving are unchanged in all modes — scale factor scales total yield and serving count together.
 
 ---
 
@@ -166,34 +166,34 @@ Macros per serving are unchanged in all modes — the scale factor scales total 
 ### Adding a new adjustment mode
 
 1. Add a radio input + label in `adjuster.js → _html()` inside `.mode-tabs`
-2. Add a `.mode-panel` div with the new target input
+2. Add a `.mode-panel` div with the new input
 3. Add a case to `adjuster.js → _scaleFactor()`
 4. Add validation rules to `adjuster.js → _validate()`
 
 ### Changing the color scheme
 
-Edit the CSS custom properties in `:root` inside `css/styles.css`. Each macro has a color and a `-light` variant used for card backgrounds — update both.
+Edit the CSS custom properties in `:root` inside `css/styles.css`. Each macro has a color and a matching `-light` variant used for card backgrounds — update both.
 
 ### Adding a new field to recipes
 
 1. Add the field to the Editor form in `editor.js → _html()`
-2. Read and validate it in `editor.js → _save()`
-3. Include it in the object passed to `App.storage.save()`
-4. Update `library.js → _card()` if it should appear on the library card
+2. Read it in `editor.js → _save()`
+3. Include it in the data object passed to `App.storage.save()`
+4. Update the Library card template in `library.js → _card()` if it should display there
 
 ### Migrating localStorage data
 
-The storage key is `rma_v1_recipes`. If you make a breaking change to the data shape, increment the key version (`rma_v2_recipes`) and write a one-time migration function in `storage.js` called from `app.js` on startup.
+The storage key is `rma_v1_recipes`. If you change the data shape in a breaking way, increment the version (`rma_v2_recipes`) and write a one-time migration in `storage.js → seedIfEmpty()` or a new `migrate()` function called from `app.js`.
 
-### Swapping in a backend
+### Adding backend persistence
 
-`App.storage` is the only place that reads and writes data. Replace the `localStorage` calls with `fetch()` calls to a REST API and the rest of the app is unaffected.
+`App.storage` is the only place that reads and writes data. Swap the `localStorage` calls for `fetch()` calls to a REST API and the rest of the app is unaffected.
 
 ---
 
 ## Browser Support
 
-Targets all evergreen browsers (Chrome, Firefox, Safari, Edge). Uses CSS Grid, CSS custom properties, and `crypto.randomUUID` (with a `Date.now()` fallback). No polyfills required.
+Targets all evergreen browsers (Chrome, Firefox, Safari, Edge). Uses CSS Grid, CSS custom properties, and `crypto.randomUUID` (with a fallback). No polyfills required.
 
 ---
 
